@@ -1,0 +1,106 @@
+##########################################
+Description
+##########################################
+-This project is aimed to create multiple threads and assign attributes based on the task specifications text file which include periodic or aperiodic nature of the pthread,
+ its priority, scheduling policy and the task function the thread should execute in. 
+-Two task functions are created, one for periodic threads and the other for aperiodic threads. 
+-Barrier synchronization is maintained to wait till all the threads are created i.e. to maintain zero phase difference between the threads.
+-As the pthreads are created, periodic threads starts executing and are interrupted by high priority threads and priority inversion is observed. 
+-By enabling priority inheritance pthreads, priority inversion is eliminated. 
+-Aperiodic threads wakeup on the specific mouse click i.e. right or left click and wait for the next signal after executing the task body. 
+-CPU affinity is mainted to make all the threads to run on 1 CPU.
+
+###########################################
+
+Process to execute the test program:
+
+Following packages are needed, in order to analyze the Kernel Trace
+trace-cmd, kernelshark
+
+You can get the packages by running the following commands
+
+    sudo apt-get install trace-cmd
+    sudo apt-get install kernelshark
+
+*Once all the pre-requisites have been met, use the following commands
+to compile and build the executable. To make the build process support
+both host machine and galileo-2 board, we have done some modifications
+in the make file.
+
+NOTE: Please know the click event before running this program. Based on
+the mouse click event number, make the necessary changes in the C code
+before compiling it. Please refer to the extra section in this README
+for instructions on checking for mouse event number.
+
+
+To build the C program using GCC, run the following command:-
+    
+    make host
+
+
+To build the C program for Galileo Board, run the following command:-
+    
+    make all
+
+
+Once the build is complete, we are now ready to execute the program using
+the following command:-
+
+    ./run_me
+
+CAUTION: Please make sure that the "process_def.txt" file has been included
+before executing the code. The file must exist in the same directory as the
+executable file. The executable reads this file and launches the threads
+accordingly
+
+The output contains the following:-
+    The running process switches between different threads internally. The process IDs are dumped out in the mail.
+    The code description is present in the code in the form of comments, and there are commented printf statements for debug.
+    The launch of an aperiodic thread has a separate printf statement which helps us check whether the mouse got detected aperiodically.
+    There are printf statements for timestamping the program, if required.
+
+
+Extra:
+1. Setting up putty:
+. After the command "make", run_call executable is generated, then connect the board and open putty by typing in putty.
+
+        . Find the ip address of the host using command "ifconfig" and findout the ethernet connection.
+          change the ip address of the host using the command "ifconfig eno1 192.168.1.6 netmask 255.255.0.0"
+
+        . Configure the putty by setting the serial baud rate 115200 and serial line to /dev/ttyUSB0
+
+        . Find the ip address of the board using command "ifconfig" and findout the ethernet connection.
+          change the ip address of the host using the command "ifconfig (ethernet connection port) 192.168.1.5 netmask 255.255.0.0"
+
+        . Run the Makefile using the Makefile instructions given at the start of this document 
+      
+        . It creates "run_me" executable.
+           Then send the following "run_me" executable using respective command
+            executable  :"$ scp run_me root@192.168.1.5:/home" 
+
+2. Checking appropriate Mouse event:
+   Please use the following command to identify the mouse event corresponding to the external mouse we add. Typical values for Galileo board have been observed to be event0:-
+   
+    cat /proc/bus/input/devices
+    
+    The output of this command would look like the following:-
+
+    I: Bus=0011 Vendor=0002 Product=0013 Version=0006
+    N: Name="VirtualPS/2 VMware VMMouse"
+    P: Phys=isa0060/serio1/input1
+    S: Sysfs=/devices/platform/i8042/serio1/input/input4
+    U: Uniq=
+    H: Handlers=mouse0 event2 
+    B: PROP=0
+    B: EV=b
+    B: KEY=70000 0 0 0 0
+    B: ABS=3
+    
+    Notice that the mouse event is event2. Modify this event number in the "main_fread.c" on line 26
+
+3. Enabling/ Disabling priority inversion
+   To enable mutex enabled priority inversion, keep line 24 in the C code "main_fread.c"
+   To disable mutex enabled priority inversion, comment out line 24 in the C code "main_fread.c"
+    
+
+/-------------------------------------------------------------------
